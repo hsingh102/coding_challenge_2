@@ -18,10 +18,46 @@ export const getAllBooks = (req: Request, res: Response): void => {
 
 export const addBook = (req: Request, res: Response): void => {
     try {
-        const newBook = req.body;
-        const createdBook = bookService.addBook(newBook);
+        // Use proper destructuring to extract fields from request body
+        const { title, author, genre } = req.body;
+ 
+        // Trim whitespace from all fields
+        const trimmedTitle = title?.trim();
+        const trimmedAuthor = author?.trim();
+        const trimmedGenre = genre?.trim();
+ 
+        // Validate that all required fields are provided and non-empty
+        if (!trimmedTitle) {
+            res.status(HTTP_STATUS.BAD_REQUEST).json({
+                message: "Title is required and cannot be empty"
+            });
+            return;
+        }
+ 
+        if (!trimmedAuthor) {
+            res.status(HTTP_STATUS.BAD_REQUEST).json({
+                message: "Author is required and cannot be empty"
+            });
+            return;
+        }
+ 
+        if (!trimmedGenre) {
+            res.status(HTTP_STATUS.BAD_REQUEST).json({
+                message: "Genre is required and cannot be empty"
+            });
+            return;
+        }
+ 
+        // Create book data with trimmed values using type-safe approach
+        const bookData: Omit<Book, "id" | "isBorrowed" | "borrowerId" | "dueDate"> = {
+            title: trimmedTitle,
+            author: trimmedAuthor,
+            genre: trimmedGenre
+        };
+ 
+        const createdBook = bookService.addBook(bookData);
         res.status(HTTP_STATUS.CREATED).json({
-            message: "Book added",
+            message: "Book added successfully",
             data: createdBook,
         });
     } catch (error) {
@@ -29,7 +65,7 @@ export const addBook = (req: Request, res: Response): void => {
             message: "Error adding book",
         });
     }
-};
+};                                                    
 
 export const updateBook = (req: Request, res: Response): void => {
     try {
@@ -116,7 +152,7 @@ export const getRecommendations = (req: Request, res: Response): void => {
         const recommendations = bookService.getRecommendations();
         res.status(HTTP_STATUS.OK).json({
             message: "Recommendations retrieved",
-            data: recommendations,
+            data: recommendations ,
         });
     } catch (error) {
         res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
